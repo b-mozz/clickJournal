@@ -38,6 +38,7 @@ model User {
   isActive Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  passwordHash String @map("password_hash")
 }
 
 model Post {
@@ -51,6 +52,34 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime? 
+}
+
+model Friendship {
+  userId String @id @default(uuid())
+  username String @unique
+  requesterId String
+  reciverId String
+  nicknameForRECIVER String?
+  nicknameForREQUESTER String?
+  reciverMarkedClosed Boolean @default(false)
+  requesterMarkedClosed Boolean @default(false)
+  status FriendshipStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  acceptedAt DateTime?
+  declinedAt DateTime?
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id String @id @default(uuid())
+  authorId String
+  caption String?
+  photoURL String?
+  latitude Float?
+  longitude Float?
+  isShared Boolean @default(true)
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
 }
 
 model Like {
