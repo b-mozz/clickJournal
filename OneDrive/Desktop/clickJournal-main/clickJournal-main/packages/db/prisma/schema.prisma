@@ -1,0 +1,68 @@
+generator client {
+  provider        = "prisma-client-js"
+  engineType      = "library"
+  previewFeatures = ["driverAdapters"]
+  output          = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum NotificationType {
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  POST_LIKED
+}
+
+enum PostVisibility {
+  PRIVATE 
+  CLOSE_FRIENDS
+  FRIENDS 
+  PUBLIC 
+}
+
+
+model User {
+  id String @id @default(uuid())
+  username String @unique
+  email String @unique
+  isPublic Boolean @default(false)
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id String @id @default(uuid())
+  authorId String
+  caption String?
+  photoBlobName String 
+  latitude Float
+  longitude Float
+  visibility PostVisibility @default(PRIVATE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime? 
+}
+
+model Like {
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+
+  @@id([userId, postId])
+}
+
+
+
+
+
+
