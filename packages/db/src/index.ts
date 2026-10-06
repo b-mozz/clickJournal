@@ -3,3 +3,4 @@
 // The migration runner (applyMigrations) is available at @clickjournal/db/migrate.
 export { prisma, LOCAL_DEV_URL } from "./client";
 export { PrismaClient } from "./generated/prisma";
+export type { Friendship } from "./generated/prisma";
