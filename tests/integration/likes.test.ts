@@ -16,6 +16,15 @@ beforeAll(async () => {
   delete process.env.DATABASE_URL;
   prisma = (await import("@clickjournal/db")).prisma;
   domain = await import("@clickjournal/domain");
+
+  // Posts must have a real author (Post.authorId -> User.id), so create the test users.
+  for (const id of [alice, bob]) {
+    await prisma.user.upsert({
+      where: { id },
+      create: { id, username: id, email: `${id}@test.local` },
+      update: {},
+    });
+  }
 }, 30000);
 
 beforeEach(async () => {
