@@ -14,6 +14,7 @@ enum FriendshipStatus {
   PENDING
   ACCEPTED
   DECLINED
+  BLOCKED
 }
 
 enum NotificationType {
@@ -30,20 +31,25 @@ enum PostVisibility {
 }
 
 
+
+
 model User {
   id String @id @default(uuid())
   username String @unique
   email String @unique
-  isPublic Boolean @default(false)
+  isPublic PostVisibility @default(PRIVATE)
   isActive Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   passwordHash String @map("password_hash")
+
+  posts               Post[]
 }
 
 model Post {
   id String @id @default(uuid())
-  authorId String
+  authorId String 
+  author User @relation(fields: [authorId], references: [id])
   caption String?
   photoBlobName String 
   latitude Float
@@ -54,34 +60,6 @@ model Post {
   deletedAt DateTime? 
 }
 
-model Friendship {
-  userId String @id @default(uuid())
-  username String @unique
-  requesterId String
-  reciverId String
-  nicknameForRECIVER String?
-  nicknameForREQUESTER String?
-  reciverMarkedClosed Boolean @default(false)
-  requesterMarkedClosed Boolean @default(false)
-  status FriendshipStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  acceptedAt DateTime?
-  declinedAt DateTime?
-  updatedAt DateTime @updatedAt
-}
-
-model Notification {
-  id String @id @default(uuid())
-  authorId String
-  caption String?
-  photoURL String?
-  latitude Float?
-  longitude Float?
-  isShared Boolean @default(true)
-  createdAt DateTime @default(now())
-  deletedAt DateTime?
-}
-
 model Like {
   userId String
   postId String
@@ -89,9 +67,3 @@ model Like {
 
   @@id([userId, postId])
 }
-
-
-
-
-
-
