@@ -2,3 +2,7 @@
 // Boilerplate — empty barrel. Example apps fill this with their own
 // schemas and query functions, following the web-only convention.
 export * from "./friendships";
+export * from "./likes";
+
+
+// I'm assuming you guys will add your own exports somewhere here as well!!!
