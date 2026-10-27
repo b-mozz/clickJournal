@@ -98,3 +98,30 @@ describe("likes", () => {
     expect(domain.likeParamsSchema.safeParse({ postId: "   " }).success).toBe(false);
   });
 });
+describe("listVisiblePostsWithLikes", () => {
+  beforeEach(async () => {
+    await prisma.like.deleteMany();
+    await prisma.post.deleteMany();
+  });
+
+  it("returns an empty list when there are no visible posts", async () => {
+    await makePost(alice, "PRIVATE");
+    expect(await domain.listVisiblePostsWithLikes(bob)).toEqual([]);
+  });
+
+  it("lists visible posts newest first with each post's count and the viewer's own like", async () => {
+    const older = await makePost(alice, "PUBLIC");
+    const newer = await makePost(alice, "PUBLIC");
+    await prisma.post.update({ where: { id: older }, data: { createdAt: new Date("2026-01-01") } });
+    await makePost(alice, "PRIVATE"); // hidden from bob
+    await makePost(alice, "PUBLIC", new Date()); // soft-deleted, hidden
+    await domain.likePost(alice, older);
+    await domain.likePost(bob, older);
+
+    const list = await domain.listVisiblePostsWithLikes(bob);
+    expect(list.map((p) => p.id)).toEqual([newer, older]);
+    expect(list[0].like).toEqual({ liked: false, count: 0 });
+    expect(list[1].like).toEqual({ liked: true, count: 2 });
+    expect(list[1].authorUsername).toBe(alice);
+  });
+});

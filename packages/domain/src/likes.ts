@@ -15,12 +15,15 @@ export type LikeState = { liked: boolean; count: number };
 // A post is visible to a user when it is not soft-deleted AND the user wrote it
 // or it is PUBLIC. FRIENDS / CLOSE_FRIENDS need the Friendship model, which does
 // not exist yet, so those posts are only visible to their author for now.
-function visiblePostWhere(userId: string, postId: string) {
+function visibleToUser(userId: string) {
   return {
-    id: postId,
     deletedAt: null,
     OR: [{ authorId: userId }, { visibility: "PUBLIC" as const }],
   };
+}
+
+function visiblePostWhere(userId: string, postId: string) {
+  return { id: postId, ...visibleToUser(userId) };
 }
 
 async function isVisible(userId: string, postId: string): Promise<boolean> {
@@ -69,4 +72,51 @@ export async function unlikePost(userId: string, postId: string): Promise<LikeSt
     prisma.like.count({ where: { postId } }),
   ]);
   return { liked: false, count };
+}
+
+export type PostWithLikes = {
+  id: string;
+  caption: string | null;
+  authorUsername: string;
+  createdAt: Date;
+  like: LikeState;
+};
+
+// Newest posts the user can see, each with its like count and whether this user
+// liked it. Always 3 queries, however many posts there are.
+export async function listVisiblePostsWithLikes(
+  userId: string,
+  limit = 20
+): Promise<PostWithLikes[]> {
+  const posts = await prisma.post.findMany({
+    where: visibleToUser(userId),
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: { id: true, caption: true, createdAt: true, author: { select: { username: true } } },
+  });
+  if (posts.length === 0) return [];
+
+  const postIds = posts.map((p) => p.id);
+  const [counts, mine] = await Promise.all([
+    prisma.like.groupBy({
+      by: ["postId"],
+      where: { postId: { in: postIds } },
+      _count: { _all: true },
+    }),
+    prisma.like.findMany({
+      where: { userId, postId: { in: postIds } },
+      select: { postId: true },
+    }),
+  ]);
+
+  const countByPost = new Map(counts.map((c) => [c.postId, c._count._all]));
+  const likedByMe = new Set(mine.map((m) => m.postId));
+
+  return posts.map((p) => ({
+    id: p.id,
+    caption: p.caption,
+    authorUsername: p.author.username,
+    createdAt: p.createdAt,
+    like: { liked: likedByMe.has(p.id), count: countByPost.get(p.id) ?? 0 },
+  }));
 }
