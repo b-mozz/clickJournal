@@ -6,3 +6,4 @@ under `docs/specs/<domain>/<feature>.md`. Infrastructure specs start from
 
 | Doc | Type | What it covers | Key ADRs |
 |---|---|---|---|
+| [friends/friendship.md](friends/friendship.md) | feature | Sending, accepting and declining friend requests | — |
