@@ -1,60 +1,74 @@
 "use client";
 
-// Heart button for a post, like Instagram. Talks to /api/posts/[postId]/likes.
+// Heart button for a post. Talks to /api/posts/[postId]/likes.
 // State diagram: docs/specs/posts/like-button.md
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type LikeState = { liked: boolean; count: number };
-type Status = "loading" | "loadFailed" | "idle" | "saving";
+type Status = "loading" | "loadFailed" | "idle" | "saving" | "saveFailed";
 
-const ERROR_TEXT = "Couldn't update your like. Try again.";
+// A request that hasn't answered after this long counts as failed,
+// so the button can never stay "saving" forever.
+const TIMEOUT_MS = 8000;
 
-export function LikeButton({ postId }: { postId: string }) {
-  const [status, setStatus] = useState<Status>("loading");
-  const [like, setLike] = useState<LikeState | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function LikeButton({ postId, initial }: { postId: string; initial?: LikeState }) {
+  // With `initial` (the page already read it on the server) there's nothing to load.
+  const [status, setStatus] = useState<Status>(initial ? "idle" : "loading");
+  const [like, setLike] = useState<LikeState | null>(initial ?? null);
+  // Which action failed, so "Try again" repeats exactly that one.
+  const [failedAction, setFailedAction] = useState<"like" | "unlike" | null>(null);
+  // Blocks a second request even if two clicks land before React re-renders.
+  const inFlight = useRef(false);
 
-  // Load the current like state when the button first appears.
-  useEffect(() => {
-    const controller = new AbortController();
+  async function load(signal?: AbortSignal) {
     setStatus("loading");
-
-    fetch(`/api/posts/${postId}/likes`, { signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(`GET likes returned ${res.status}`);
-        return res.json() as Promise<LikeState>;
-      })
-      .then((data) => {
-        setLike(data);
-        setStatus("idle");
-      })
-      .catch((err) => {
-        if (controller.signal.aborted) return; // component went away; ignore
-        console.error(err);
-        setStatus("loadFailed");
+    try {
+      const res = await fetch(`/api/posts/${postId}/likes`, {
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)])
+          : AbortSignal.timeout(TIMEOUT_MS),
       });
+      if (!res.ok) throw new Error(`GET likes returned ${res.status}`);
+      setLike((await res.json()) as LikeState);
+      setStatus("idle");
+    } catch (err) {
+      if (signal?.aborted) return; // component went away; ignore
+      console.warn(err);
+      setStatus("loadFailed");
+    }
+  }
 
+  // Only fetch on our own when the page didn't hand us the state.
+  useEffect(() => {
+    if (initial) return;
+    const controller = new AbortController();
+    load(controller.signal);
     return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
-  async function toggle() {
-    if (!like || status !== "idle") return;
+  async function save(action: "like" | "unlike") {
+    if (inFlight.current) return; // a request is already on its way
+    inFlight.current = true;
     setStatus("saving");
-    setError(null);
+    setFailedAction(null);
 
     try {
       const res = await fetch(`/api/posts/${postId}/likes`, {
-        method: like.liked ? "DELETE" : "POST",
+        method: action === "like" ? "POST" : "DELETE",
+        signal: AbortSignal.timeout(TIMEOUT_MS),
       });
       if (!res.ok) throw new Error(`Like request returned ${res.status}`);
       // Trust the server's answer instead of doing count + 1 ourselves.
       setLike((await res.json()) as LikeState);
-    } catch (err) {
-      console.error(err);
-      setError(ERROR_TEXT); // keep the old like state; nothing changed
-    } finally {
       setStatus("idle");
+    } catch (err) {
+      console.warn(err);
+      setFailedAction(action); // keep the old heart + count; nothing changed
+      setStatus("saveFailed");
+    } finally {
+      inFlight.current = false;
     }
   }
 
@@ -63,7 +77,14 @@ export function LikeButton({ postId }: { postId: string }) {
   }
 
   if (status === "loadFailed" || !like) {
-    return <span className="text-sm text-neutral-500">Likes unavailable</span>;
+    return (
+      <span className="flex items-center gap-2 text-sm text-neutral-500">
+        Likes unavailable
+        <button type="button" onClick={() => load()} className="underline">
+          Try again
+        </button>
+      </span>
+    );
   }
 
   // Derived values: computed from state on every render, never stored.
@@ -74,20 +95,24 @@ export function LikeButton({ postId }: { postId: string }) {
     <div className="flex items-center gap-2">
       <button
         type="button"
-        onClick={toggle}
-        disabled={isSaving}
+        onClick={() => save(like.liked ? "unlike" : "like")}
+        // aria-disabled (not disabled) keeps keyboard focus on the button while saving.
+        aria-disabled={isSaving}
         aria-pressed={like.liked}
         aria-label={label}
-        className="rounded-full px-2 py-1 text-xl disabled:opacity-50"
+        className="rounded-full px-2 py-1 text-xl aria-disabled:cursor-wait aria-disabled:opacity-50"
       >
         {like.liked ? "♥" : "♡"}
       </button>
       <span className="text-sm text-neutral-700">
         {like.count} {like.count === 1 ? "like" : "likes"}
       </span>
-      {error && (
-        <span role="alert" className="text-sm text-red-600">
-          {error}
+      {status === "saveFailed" && failedAction && (
+        <span role="alert" className="flex items-center gap-2 text-sm text-red-600">
+          Couldn&apos;t save your {failedAction}.
+          <button type="button" onClick={() => save(failedAction)} className="underline">
+            Try again
+          </button>
         </span>
       )}
     </div>
