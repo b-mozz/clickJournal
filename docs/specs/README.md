@@ -6,3 +6,5 @@ under `docs/specs/<domain>/<feature>.md`. Infrastructure specs start from
 
 | Doc | Type | What it covers | Key ADRs |
 |---|---|---|---|
+
+| [posts/likes.md](posts/likes.md) | feature | Liking and unliking a visible post | — |
