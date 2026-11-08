@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@clickjournal/db";
+import { PostVisibility } from "../../../../../packages/db/src/generated/prisma";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const user = await prisma.user.create({
-      data: { username, email },
+      data: { username, email, }
     });
     return NextResponse.json(user, { status: 201 });
   } catch (error: any) {
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
+    console.error(error.message)
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
