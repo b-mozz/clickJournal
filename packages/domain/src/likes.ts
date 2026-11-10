@@ -3,6 +3,7 @@
 
 import { prisma } from "@clickjournal/db";
 import { z } from "zod";
+import { visiblePostWhere } from "./visibility";
 
 // Route params for /api/posts/[postId]/likes. Post ids are usually uuids, but
 // not always (the seed post is "seed-1"), so only require a non-blank id.
@@ -11,17 +12,6 @@ export const likeParamsSchema = z.object({
 });
 
 export type LikeState = { liked: boolean; count: number };
-
-// A post is visible to a user when it is not soft-deleted AND the user wrote it
-// or it is PUBLIC. FRIENDS / CLOSE_FRIENDS need the Friendship model, which does
-// not exist yet, so those posts are only visible to their author for now.
-function visiblePostWhere(userId: string, postId: string) {
-  return {
-    id: postId,
-    deletedAt: null,
-    OR: [{ authorId: userId }, { visibility: "PUBLIC" as const }],
-  };
-}
 
 async function isVisible(userId: string, postId: string): Promise<boolean> {
   const post = await prisma.post.findFirst({
