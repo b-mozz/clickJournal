@@ -16,17 +16,88 @@
   --color-signal-soft: #ff9d94; /* signal as text on glass: 5.1:1 even over the brightest map tower */
 }
 
-/* Frosted glass for UI floating over the map or a photo. Spec: design-system.md (Glass) */
-@utility glass {
-  /* 80% keeps white/80 text at AA even over icy towers; blur keeps it glassy. */
-  background-color: rgb(14 22 32 / 0.8);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgb(255 255 255 / 0.14);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
+/*
+ * Liquid glass: the material for UI floating over the map or a photo.
+ * Spec: design-system.md (Glass).
+ *   - tint: 80% navy keeps white and white/80 text at AA even over the
+ *     brightest map tower (measured, see spec)
+ *   - backdrop: blur + saturate + slight brighten so the map glows through
+ *   - rim (::before): 1px gradient border, light catching the top-left edge
+ *   - sheen (::after): soft highlight fading out over the top half
+ * Pseudo-elements sit at z-index -1 inside an isolated stacking context, so
+ * they paint over the tint but under the content.
+ */
+:root {
+  --glass-tint: rgb(14 22 32 / 0.8);
+  --glass-backdrop: blur(20px) saturate(180%) brightness(1.08);
+  --glass-rim: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.55),
+    rgb(255 255 255 / 0.08) 35%,
+    rgb(255 255 255 / 0.04) 65%,
+    rgb(255 255 255 / 0.22)
+  );
+  --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0) 45%);
+  --glass-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.25),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
     0 24px 48px -24px rgb(0 0 0 / 0.7);
-  color: #fdfff9;
+}
+
+@layer components {
+  .glass {
+    position: relative;
+    isolation: isolate;
+    background-color: var(--glass-tint);
+    -webkit-backdrop-filter: var(--glass-backdrop);
+    backdrop-filter: var(--glass-backdrop);
+    box-shadow: var(--glass-shadow);
+    color: #fdfff9;
+  }
+}
+
+/* MapLibre's own CSS is unlayered, so its zoom controls take the material in
+   an unlayered rule to win over it. */
+.maplibregl-ctrl-group:not(:empty) {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+  backdrop-filter: var(--glass-backdrop);
+  box-shadow: var(--glass-shadow);
+  border-radius: 0.5rem;
+}
+.maplibregl-ctrl-group button + button {
+  border-top-color: rgb(255 255 255 / 0.14);
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+
+.glass::before,
+.glass::after,
+.maplibregl-ctrl-group:not(:empty)::before,
+.maplibregl-ctrl-group:not(:empty)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.glass::before,
+.maplibregl-ctrl-group:not(:empty)::before {
+  padding: 1px;
+  background: var(--glass-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.glass::after,
+.maplibregl-ctrl-group:not(:empty)::after {
+  background: var(--glass-sheen);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -43,22 +114,6 @@
     outline: 2px solid var(--color-signal);
     outline-offset: 2px;
   }
-}
-
-/* MapLibre zoom controls, re-skinned as glass. */
-.maplibregl-ctrl-group:not(:empty) {
-  background-color: rgb(14 22 32 / 0.8);
-  -webkit-backdrop-filter: blur(18px) saturate(160%);
-  backdrop-filter: blur(18px) saturate(160%);
-  border: 1px solid rgb(255 255 255 / 0.14);
-  border-radius: 0.5rem;
-  box-shadow: 0 12px 32px -16px rgb(0 0 0 / 0.7);
-}
-.maplibregl-ctrl-group button + button {
-  border-top-color: rgb(255 255 255 / 0.14);
-}
-.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
-  filter: invert(1);
 }
 
 @keyframes rise-in {
