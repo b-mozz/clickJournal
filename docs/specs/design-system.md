@@ -60,49 +60,63 @@ slate-blue street shadows, and one taillight red.
 
 ## Map
 
-The map uses the landing hero's colors, pushed in saturation, and is the
-same in every color scheme: saturated slate-blue land, navy-black water,
-and ice-white accents. The ice is visible at every zoom. At city scale it
-comes from crisp shorelines, pale-ice parks and ice motorways. Up close,
-towers turn ice white too.
+The map is an elevation relief in the landing hero's blues and ice, the
+same in every color scheme. All land is colored by height in hard-edged
+bands, so low-lying shore and higher ground form an organic pattern like a
+flood map. The pattern covers the whole city at every zoom. Water is
+navy-black and sits on top of the relief.
+
+| Elevation | Color |
+|---|---|
+| up to 3m (shoreline lowlands) | `#3D6488` |
+| 3–10m | `#7FA8D1` |
+| 10–25m | `#C4DCF2` |
+| above 25m (high ground) | `#EAF4FF` (ice) |
 
 - **Minimal by default.** No street grid, rail, street names, highway
-  shields or admin borders. Motorways stay as thin ice lines so the bridges
-  keep the boroughs connected. Streets, rail and street names appear only
-  from zoom 15 (block level).
-- **Buildings** fade in from zoom 13 to 14.5. Low-rise buildings sit one
-  step lighter than the land. Towers 45m and taller are ice white, because
-  heights only exist from zoom 14.
+  shields, admin borders or park fills, so nothing masks the relief.
+  Motorways stay as quiet mid-blue lines (`#26476A` at 70%) so the bridges
+  read over the water. Streets, rail and street names appear only from
+  zoom 15.
+- **Buildings** fade in from zoom 13 to 14.5. Low-rise buildings are a
+  translucent white wash (28%) that lets the relief show through. Towers
+  45m and taller are solid ice.
+- **Labels** are navy (`#0B1520`, `#26476A` for minor) on an ice halo,
+  because most of the relief is light.
+- **Shorelines:** a crisp ice line at 90%.
 - **Pins are photo frames:** the post's own photo, 40px square, with a 2px
   white border, a `rounded-sm` (2px) corner and one crisp shadow. There is
   no glow and no red. An empty frame is an `ice` tile with a small camera
   mark.
-- Source: `apps/web/components/map-theme.ts` (`MAP_PALETTE`,
-  `STREETS_MIN_ZOOM`).
-
-| Role | Color |
-|---|---|
-| Land | `#3D6488` |
-| Water | `#0B1520` |
-| Ice (shorelines, towers, empty frames) | `#EAF4FF`, shorelines at 90% |
-| Parks | `#A9CDEE` |
-| Motorways / streets (zoom 15+) | `#C4DCF2` / `#5A87B0` |
-| Buildings, low-rise | `#5583AD` |
-| Labels | `#FFFFFF` (cities) / `#D6E6F5` (others), on a `#264563` halo |
+- Source: `apps/web/components/map-theme.ts` (`RELIEF_BANDS`,
+  `MAP_PALETTE`, `STREETS_MIN_ZOOM`). Elevation data is AWS Terrain Tiles
+  (Terrarium encoding, free, no API key), drawn with MapLibre's
+  `color-relief` layer.
 
 ## Glass
 
-UI that floats over the map or a photo (cards, map controls) is frosted
-glass: the `glass` utility in `globals.css`.
+UI that floats over the map or a photo is liquid glass: the card, the map
+header pill, the map's zoom controls, and buttons sitting on a photo. The
+`.glass` class in `globals.css` provides it, and the zoom controls share
+the same `--glass-*` variables.
 
-- Surface: `rgb(14 22 32 / .8)`, `backdrop-filter: blur(18px) saturate(160%)`,
-  a 1px `white / 14%` border, a 1px inner top highlight, and one deep soft
-  drop shadow.
-- Text on glass is white (`#FDFFF9`). Secondary text is white at 80%. Red
-  text on glass uses `signal-soft` (`#FF9D94`), because `signal` is too dark
-  to read there. These hold AA over the brightest thing glass can cover, an
-  icy tower: 10.1:1 for white, 7.2:1 for white/80 and 5.1:1 for
-  `signal-soft`. That's why the surface is .8 opaque and not lighter.
+- **Tint:** `rgb(14 22 32 / .8)`.
+- **Backdrop:** `blur(20px) saturate(180%) brightness(1.08)`, so the map's
+  color glows through.
+- **Rim:** a 1px gradient border, brightest at the top-left like light
+  catching a glass edge, fading around the shape.
+- **Sheen:** a white highlight at 10%, fading out over the top 45%.
+- **Depth:** a 1px inner highlight at the top and bottom edges, plus one
+  deep soft drop shadow.
+- Text on glass is white (`#FDFFF9`), with secondary text at white/80.
+  Over the brightest possible backdrop, the tint gives 9.6:1 for white and
+  6.9:1 for white/80. Under the sheen it's 7.2:1 and 5.3:1. That's why the
+  tint stays at .8 and not clearer.
+- Red text on glass uses `signal-soft` (`#FF9D94`). It reaches 4.85:1 on
+  the tint but only 3.6:1 under the sheen, so it never goes in the top half
+  of a glass panel.
+- No refraction (edge distortion). SVG backdrop filters only work in
+  Chromium, and the material must look the same in Safari.
 - Glass is never used on `paper`, only over imagery.
 
 ## Type

@@ -10,7 +10,8 @@ brings back the photo you took there.
 
 ## Where it lives
 - `packages/domain/src/posts.ts`: `listMyMapPosts`
-- `apps/web/app/map/page.tsx`: the `/map` route (a server component)
+- `apps/web/app/map/page.tsx`: the `/map` route (a server component) and
+  its header pill
 - `apps/web/components/MyMap.tsx`: the map itself (a client component)
 - `apps/web/components/PostCard.tsx`: the card a pin opens
 - `apps/web/app/maplibre-worker.mjs/route.ts`: serves MapLibre's web worker
@@ -37,6 +38,10 @@ brings back the photo you took there.
   dark mode. Panning is limited to the NYC box. The map first fits all the
   pins, or the whole box when there are none. The street grid and street
   names stay hidden below zoom 15.
+- **Header pill.** A glass pill floats at the top center. It holds the
+  "ClickJournal" wordmark, which links to `/` with a 44px target, and the
+  count of pins on the map ("1 place" / "{n} places"). It comes first in
+  the tab order, ahead of the map and pins.
 - **Pins.** Each pin is a 44×44px `<button>` holding a 40px square photo
   frame. The frame shows the post's photo from
   `GET /api/posts/:postId/photo`, loaded lazily. If the photo fails, the
@@ -69,9 +74,10 @@ brings back the photo you took there.
 | A post at lat 34.05, lng −118.24 (LA) | Not in the response |
 | A soft-deleted post | Not in the response |
 | User has 600 NYC posts | The 500 newest are pinned |
-| User has no posts | Empty-state text and the map of NYC |
+| User has no posts | Empty-state text, the map of NYC, and "0 places" in the pill |
 | A post whose blob is missing | Its pin is an ice frame with a camera mark. Its card shows "Photo unavailable", caption, date, like button |
 | A post with a photo | Its pin shows that photo in a white square frame |
+| Tab from page load | The ClickJournal link, then the map, then the pins |
 | Tab to a pin, Enter, then Esc | Card opens, then closes. Focus is back on that pin |
 | Drag the map toward New Jersey | Stops at the NYC box edge |
 | Zoom from 12 to 15 | No street grid until 15. Buildings fade in from 13 |
@@ -109,6 +115,10 @@ brings back the photo you took there.
 - MapLibre places a marker by writing `transform` on the marker element,
   so the pin button must never set `transform` itself. Any visual change
   goes on the inner dot. Scaling the button made pins jump on hover.
+- Elevation relief comes from AWS Terrain Tiles, fetched by the browser
+  from `s3.amazonaws.com/elevation-tiles-prod` and credited in the map
+  attribution. It's a second tile host besides OpenFreeMap. Like the base
+  tiles, no user data goes in those requests.
 - The box is a rough rectangle, so it includes slivers of NJ and Nassau.
   Matching borough boundaries exactly isn't worth the complexity.
 

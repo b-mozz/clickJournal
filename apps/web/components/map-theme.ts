@@ -21,10 +21,10 @@ export const MAP_PALETTE = {
   building: "#5583ad",
   tower: "#eaf4ff",
   street: "#5a87b0",
-  motorway: "#c4dcf2", // ice: keeps the bridges drawn at city zoom
-  label: "#ffffff",
-  labelMuted: "#d6e6f5",
-  labelHalo: "#264563",
+  motorway: "#26476a", // quiet mid-blue: reads on water and on the light relief bands
+  label: "#0b1520", // labels sit on the relief, which is mostly light
+  labelMuted: "#26476a",
+  labelHalo: "#eaf4ff",
   waterLabel: "#6f9cc7",
 } as const;
 
@@ -47,15 +47,24 @@ function paintFor(id: string, type: string, sourceLayer: string | undefined): Pa
 
   if (sourceLayer === "water") return { "fill-color": P.water };
   if (sourceLayer === "waterway") return { "line-color": P.water };
-  if (sourceLayer === "park" || id === "landcover_wood") return { "fill-color": P.park, "fill-opacity": 1 };
+  // Parks and woods would mask the elevation relief, which is the map's texture.
+  if (sourceLayer === "park" || id === "landcover_wood") return { "fill-opacity": 0 };
   if (id === "landuse_residential") return { "fill-opacity": 0 };
   if (sourceLayer === "aeroway") return type === "fill" ? { "fill-color": P.park } : { "line-color": P.park };
 
   if (sourceLayer === "building") {
     return {
       // Low-rise just lifts off the land; towers catch the light.
-      "fill-color": ["step", ["coalesce", ["get", "render_height"], 0], P.building, TOWER_METERS, P.tower],
-      "fill-outline-color": P.land,
+      // Low-rise is a translucent white wash so the relief shows through;
+      // towers are solid ice.
+      "fill-color": [
+        "step",
+        ["coalesce", ["get", "render_height"], 0],
+        "rgba(255, 255, 255, 0.28)",
+        TOWER_METERS,
+        P.tower,
+      ],
+      "fill-outline-color": "rgba(0, 0, 0, 0)",
       // Fade in as footprints arrive (zoom 13), so they never pop.
       "fill-opacity": ["interpolate", ["linear"], ["zoom"], 13, 0, 14.5, 1],
     };
@@ -64,7 +73,7 @@ function paintFor(id: string, type: string, sourceLayer: string | undefined): Pa
   if (sourceLayer === "transportation") {
     if (type === "fill") return { "fill-color": P.street };
     if (id.includes("casing")) return { "line-color": P.land };
-    if (id.includes("motorway")) return { "line-color": P.motorway };
+    if (id.includes("motorway")) return { "line-color": P.motorway, "line-opacity": 0.7 };
     return { "line-color": P.street };
   }
   return {};
@@ -126,4 +135,56 @@ export function applyMapTheme(map: MaplibreMap) {
     }
   }
   addShoreLine(map);
+  addRelief(map);
+}
+
+// Elevation relief: every bit of land is colored by height, in hard-edged
+// bands, so low-lying shore and higher ground make an organic two-tone
+// pattern at every zoom, like a flood map. Data: AWS Terrain Tiles
+// (Terrarium encoding, free, no key).
+const RELIEF_SOURCE = "cj-terrain";
+const RELIEF_LAYER = "cj-relief";
+
+// Elevation bands in meters, low to high. Hard edges come from repeating each
+// break point: color A up to the break, color B from just after it.
+export const RELIEF_BANDS = [
+  { upTo: 3, color: "#3d6488" }, // shoreline lowlands: saturated slate
+  { upTo: 10, color: "#7fa8d1" },
+  { upTo: 25, color: "#c4dcf2" },
+  { upTo: Infinity, color: "#eaf4ff" }, // high ground: ice
+] as const;
+
+function reliefColor() {
+  const stops: (number | string)[] = [-50, RELIEF_BANDS[0].color];
+  for (let i = 0; i < RELIEF_BANDS.length - 1; i++) {
+    const band = RELIEF_BANDS[i]!;
+    stops.push(band.upTo, band.color, band.upTo + 0.01, RELIEF_BANDS[i + 1]!.color);
+  }
+  stops.push(500, RELIEF_BANDS[RELIEF_BANDS.length - 1]!.color);
+  return ["interpolate", ["linear"], ["elevation"], ...stops];
+}
+
+function addRelief(map: MaplibreMap) {
+  if (map.getLayer(RELIEF_LAYER)) return;
+  if (!map.getSource(RELIEF_SOURCE)) {
+    map.addSource(RELIEF_SOURCE, {
+      type: "raster-dem",
+      tiles: ["https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"],
+      encoding: "terrarium",
+      tileSize: 256,
+      maxzoom: 15,
+      attribution:
+        '<a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> (Mapzen, AWS Open Data)',
+    });
+  }
+  // Under the water fill, so water keeps its own navy over the relief.
+  map.addLayer(
+    {
+      id: RELIEF_LAYER,
+      type: "color-relief",
+      source: RELIEF_SOURCE,
+      paint: { "color-relief-color": reliefColor() as never },
+    },
+    "water"
+  );
 }
