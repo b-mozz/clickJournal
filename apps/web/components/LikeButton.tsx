@@ -59,11 +59,11 @@ export function LikeButton({ postId }: { postId: string }) {
   }
 
   if (status === "loading") {
-    return <span className="text-sm text-neutral-400">Loading likes…</span>;
+    return <span className="text-sm opacity-80">Loading likes…</span>;
   }
 
   if (status === "loadFailed" || !like) {
-    return <span className="text-sm text-neutral-500">Likes unavailable</span>;
+    return <span className="text-sm opacity-80">Likes unavailable</span>;
   }
 
   // Derived values: computed from state on every render, never stored.
@@ -82,11 +82,11 @@ export function LikeButton({ postId }: { postId: string }) {
       >
         {like.liked ? "♥" : "♡"}
       </button>
-      <span className="text-sm text-neutral-700">
+      <span className="text-sm opacity-80">
         {like.count} {like.count === 1 ? "like" : "likes"}
       </span>
       {error && (
-        <span role="alert" className="text-sm text-red-600">
+        <span role="alert" className="text-sm text-signal-soft">
           {error}
         </span>
       )}
