@@ -1,33 +1,48 @@
-// Boilerplate home page. Shows the current dev user and a link to the health
-// check endpoint. Example branches replace this with their own app-specific UI.
-import { currentUserId } from "@clickjournal/auth";
+// Landing page: one full-bleed screen with two actions.
+// Spec: docs/specs/landing/landing-page.md
+import Image from "next/image";
+import Link from "next/link";
+import hero from "../public/landing/hero.jpg";
 
-export const dynamic = "force-dynamic";
-
-export default async function Home() {
-  const userId = await currentUserId();
-
+export default function Landing() {
   return (
-    <main className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-bold">ClickJournal</h1>
-        <p className="text-sm text-neutral-500">
-          Signed in as <code className="rounded bg-neutral-100 px-1">{userId}</code> (dev
-          identity stub — real auth arrives in Week 8)
-        </p>
-      </header>
+    <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden bg-night px-4 text-white">
+      <Image
+        src={hero}
+        alt=""
+        priority
+        sizes="100vw"
+        placeholder="blur"
+        className="absolute inset-0 -z-20 h-full w-full object-cover object-[50%_55%]"
+      />
+      {/* Scrim: heaviest behind the text, so white copy stays at AA on any part of the photo. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(22_27_33/0.65),rgb(22_27_33/0.4))]"
+      />
 
-      <section className="rounded-lg border border-neutral-200 bg-neutral-50 p-6">
-        <p className="mb-4 text-neutral-600">
-          Welcome to ClickJournal. The database is connected and ready.
-        </p>
-        <a
-          href="/api/health"
-          className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
-        >
-          Check health &rarr;
-        </a>
-      </section>
+      <div className="flex max-w-3xl flex-col items-center text-center">
+        <p className="text-sm font-medium uppercase tracking-[0.3em]">ClickJournal</p>
+        <h1 className="animate-rise-in mt-6 text-[clamp(2.5rem,7vw,5.5rem)] font-semibold leading-none tracking-[-0.02em]">
+          Get out there.
+        </h1>
+        <p className="mt-5 text-lg text-white/90">Photograph your city, one place at a time.</p>
+
+        <div className="mt-10 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/sign-up"
+            className="inline-flex min-h-11 items-center rounded-full bg-signal px-7 text-[0.9375rem] font-medium text-on-signal shadow-lg transition-colors hover:bg-signal-strong"
+          >
+            Sign up
+          </Link>
+          <Link
+            href="/sign-in"
+            className="inline-flex min-h-11 items-center rounded-full border border-white/80 px-7 text-[0.9375rem] font-medium text-white transition-colors hover:bg-white/10"
+          >
+            Sign in
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
