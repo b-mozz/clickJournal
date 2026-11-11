@@ -29,3 +29,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
+export async function GET(request: Request){
+  const { searchParams } = new URL(request.url);
+  const username = searchParams.get("username");
+
+  if(!username){
+    return NextResponse.json({ error: "Username is required" }, {status : 400});
+  }
+  const user = await prisma.user.findFirst({
+    where: {username, isActive: true},
+    select: {username: true, email: true, isPublic: true, isActive: true, createdAt: true}
+  });
+  if(!user){
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+  return NextResponse.json(user);
+}
