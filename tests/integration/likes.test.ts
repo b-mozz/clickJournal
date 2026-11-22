@@ -86,7 +86,15 @@ describe("likes", () => {
     expect(await domain.getLikeState(bob, randomUUID())).toBeNull();
   });
 
-  it("rejects a malformed postId", () => {
-    expect(domain.likeParamsSchema.safeParse({ postId: "not-a-uuid" }).success).toBe(false);
+  it("works with a post id that isn't a uuid (like the seed post)", async () => {
+    await prisma.post.create({
+      data: { id: "seed-like", authorId: alice, photoBlobName: "p.jpg", latitude: 0, longitude: 0, visibility: "PUBLIC" },
+    });
+    expect(domain.likeParamsSchema.safeParse({ postId: "seed-like" }).success).toBe(true);
+    expect(await domain.likePost(bob, "seed-like")).toEqual({ liked: true, count: 1 });
+  });
+
+  it("rejects a blank postId", () => {
+    expect(domain.likeParamsSchema.safeParse({ postId: "   " }).success).toBe(false);
   });
 });

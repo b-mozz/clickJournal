@@ -26,7 +26,8 @@ can render its state and toggle it.
   is its author or its visibility is `PUBLIC`. Every handler returns
   `404 NOT_FOUND` for a post that is unknown, soft-deleted, or not visible, and
   writes nothing.
-- A `postId` that is not a uuid returns `400 VALIDATION_ERROR`.
+- A blank `postId` returns `400 VALIDATION_ERROR`. Post ids are usually uuids,
+  but any non-blank id up to 100 characters is accepted (the seed post is `seed-1`).
 - Unexpected failures return `500 INTERNAL_ERROR` and are logged; raw errors
   never reach the client.
 - Errors use the shape `{ error: { code, message } }`.
@@ -44,7 +45,12 @@ can render its state and toggle it.
 | Alice likes her own `PRIVATE` post | `200 { liked: true, count: 1 }` |
 | Bob `POST`s on Alice's `PRIVATE` post | `404 NOT_FOUND`, no row written |
 | Any request on a soft-deleted post | `404 NOT_FOUND` |
+<<<<<<< HEAD
 | `postId` is `abc` | `400 VALIDATION_ERROR` |
+=======
+| `postId` is `seed-1` (the seed post) | Works like any other post |
+| `postId` is blank | `400 VALIDATION_ERROR` |
+>>>>>>> 3702acc3765415890eebc17d38910ed175abc733
 
 ## Verify
 - `pnpm test` runs `tests/integration/likes.test.ts`.
@@ -53,7 +59,10 @@ can render its state and toggle it.
   curl -X POST   -H "x-user-id: bob" localhost:3000/api/posts/<postId>/likes
   curl           -H "x-user-id: bob" localhost:3000/api/posts/<postId>/likes
   curl -X DELETE -H "x-user-id: bob" localhost:3000/api/posts/<postId>/likes
+<<<<<<< HEAD
   curl -X POST   -H "x-user-id: bob" localhost:3000/api/posts/abc/likes   # 400
+=======
+>>>>>>> 3702acc3765415890eebc17d38910ed175abc733
 ```
 
 ## Constraints & decisions

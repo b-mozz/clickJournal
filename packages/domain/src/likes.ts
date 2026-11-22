@@ -4,9 +4,10 @@
 import { prisma } from "@clickjournal/db";
 import { z } from "zod";
 
-// Route params for /api/posts/[postId]/likes. Post ids are uuids.
+// Route params for /api/posts/[postId]/likes. Post ids are usually uuids, but
+// not always (the seed post is "seed-1"), so only require a non-blank id.
 export const likeParamsSchema = z.object({
-  postId: z.string().uuid(),
+  postId: z.string().trim().min(1).max(100),
 });
 
 export type LikeState = { liked: boolean; count: number };
