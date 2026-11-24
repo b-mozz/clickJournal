@@ -2,15 +2,20 @@
 // the maplibre-gl version. MapLibre normally finds the worker next to its own
 // script, which doesn't survive Next's bundling. Spec: docs/specs/map/my-map.md
 import { readFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-
-const require = createRequire(import.meta.url);
+import path from "node:path";
 
 export const dynamic = "force-static";
 
+// Read from the app's own node_modules (pnpm links direct deps there) rather
+// than require.resolve: webpack rewrites require.resolve/createRequire into
+// bundled module ids, which readFile can't open.
+const WORKER_PATH = path.join(
+  process.cwd(),
+  "node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs",
+);
+
 export async function GET() {
-  const file = require.resolve("maplibre-gl/dist/maplibre-gl-worker.mjs");
-  const body = await readFile(file);
+  const body = await readFile(WORKER_PATH);
   return new Response(body, {
     headers: {
       "Content-Type": "text/javascript; charset=utf-8",
