@@ -1,6 +1,5 @@
-// Boilerplate home page. Shows the current dev user and a link to the health
-// check endpoint. Example branches replace this with their own app-specific UI.
 import { currentUserId } from "@clickjournal/auth";
+import CreatePostForm from "./create-post-form";
 
 export const dynamic = "force-dynamic";
 
@@ -12,14 +11,20 @@ export default async function Home() {
       <header>
         <h1 className="text-2xl font-bold">ClickJournal</h1>
         <p className="text-sm text-neutral-500">
-          Signed in as <code className="rounded bg-neutral-100 px-1">{userId}</code> (dev
-          identity stub — real auth arrives in Week 8)
+          Signed in as{" "}
+          <code className="rounded bg-neutral-100 px-1">{userId}</code>{" "}
+          (dev identity stub — real auth arrives in Week 8)
         </p>
       </header>
 
       <section className="rounded-lg border border-neutral-200 bg-neutral-50 p-6">
+        <h2 className="mb-4 text-xl font-semibold">Create a post</h2>
+        <CreatePostForm />
+      </section>
+
+      <section className="rounded-lg border border-neutral-200 bg-neutral-50 p-6">
         <p className="mb-4 text-neutral-600">
-          Welcome to ClickJournal. The database is connected and ready.
+          Check whether the database is connected:
         </p>
         <a
           href="/api/health"
