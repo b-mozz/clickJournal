@@ -70,6 +70,9 @@ stateDiagram-v2
   on the heart while saving.
 
 ## Constraints & decisions
+- Text colors inherit from the surface around the button. The count and
+  status text use 80% opacity, and the error uses `signal-soft`, so the button
+  reads on `paper` and on glass.
 - `liked` and `count` are stored once, in a single `like` object from the
   server. `isSaving`, the heart icon and the label are derived from state on
   each render, never stored separately, so they can't fall out of sync.

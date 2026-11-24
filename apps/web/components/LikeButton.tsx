@@ -73,7 +73,7 @@ export function LikeButton({ postId, initial }: { postId: string; initial?: Like
   }
 
   if (status === "loading") {
-    return <span className="text-sm text-neutral-400">Loading likes…</span>;
+    return <span className="text-sm opacity-80">Loading likes…</span>;
   }
 
   if (status === "loadFailed" || !like) {
@@ -104,7 +104,7 @@ export function LikeButton({ postId, initial }: { postId: string; initial?: Like
       >
         {like.liked ? "♥" : "♡"}
       </button>
-      <span className="text-sm text-neutral-700">
+      <span className="text-sm opacity-80">
         {like.count} {like.count === 1 ? "like" : "likes"}
       </span>
       {status === "saveFailed" && failedAction && (

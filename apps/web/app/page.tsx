@@ -1,3 +1,8 @@
+// Landing page: one full-bleed screen with two actions.
+// Spec: docs/specs/landing/landing-page.md
+import Image from "next/image";
+import Link from "next/link";
+import hero from "../public/landing/hero.jpg";
 import { currentUserId } from "@clickjournal/auth";
 import CreatePostForm from "./create-post-form";
 
@@ -6,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const userId = await currentUserId();
 
+export default function Landing() {
   return (
     <main className="space-y-8">
       <header>

@@ -28,6 +28,23 @@ async function main() {
     },
 
   })
+
+  // A few demo-user posts around NYC so /map has pins (docs/specs/map/my-map.md).
+  // Their blobs don't exist in Azurite, so the card shows "Photo unavailable".
+  const mapPosts = [
+    { id: "seed-map-1", caption: "Sunset off the Brooklyn Bridge", latitude: 40.7061, longitude: -73.9969 },
+    { id: "seed-map-2", caption: "Bethesda Terrace, Central Park", latitude: 40.774, longitude: -73.9708 },
+    { id: "seed-map-3", caption: "High Line, morning", latitude: 40.748, longitude: -74.0048 },
+    { id: "seed-map-4", caption: "Domino Park, Williamsburg", latitude: 40.7144, longitude: -73.9682 },
+    { id: "seed-map-5", caption: null, latitude: 40.6602, longitude: -73.969 }, // Prospect Park
+  ];
+  for (const p of mapPosts) {
+    await prisma.post.upsert({
+      where: { id: p.id },
+      update: {},
+      create: { ...p, authorId: demo.id, photoBlobName: `seed/${p.id}.jpg`, visibility: "PRIVATE" },
+    })
+  }
 }
 
 main().catch((err) => {
