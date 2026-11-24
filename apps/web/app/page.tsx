@@ -3,46 +3,42 @@
 import Image from "next/image";
 import Link from "next/link";
 import hero from "../public/landing/hero.jpg";
+import { currentUserId } from "@clickjournal/auth";
+import CreatePostForm from "./create-post-form";
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const userId = await currentUserId();
 
 export default function Landing() {
   return (
-    <main className="relative isolate flex min-h-svh items-center justify-center overflow-hidden bg-night px-4 text-white">
-      <Image
-        src={hero}
-        alt=""
-        priority
-        sizes="100vw"
-        placeholder="blur"
-        className="absolute inset-0 -z-20 h-full w-full object-cover object-[50%_55%]"
-      />
-      {/* Scrim: heaviest behind the text, so white copy stays at AA on any part of the photo. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,rgb(22_27_33/0.65),rgb(22_27_33/0.4))]"
-      />
+    <main className="space-y-8">
+      <header>
+        <h1 className="text-2xl font-bold">ClickJournal</h1>
+        <p className="text-sm text-neutral-500">
+          Signed in as{" "}
+          <code className="rounded bg-neutral-100 px-1">{userId}</code>{" "}
+          (dev identity stub — real auth arrives in Week 8)
+        </p>
+      </header>
 
-      <div className="flex max-w-3xl flex-col items-center text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.3em]">ClickJournal</p>
-        <h1 className="animate-rise-in mt-6 text-[clamp(2.5rem,7vw,5.5rem)] font-semibold leading-none tracking-[-0.02em]">
-          Get out there.
-        </h1>
-        <p className="mt-5 text-lg text-white/90">Photograph your city, one place at a time.</p>
+      <section className="rounded-lg border border-neutral-200 bg-neutral-50 p-6">
+        <h2 className="mb-4 text-xl font-semibold">Create a post</h2>
+        <CreatePostForm />
+      </section>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Link
-            href="/sign-up"
-            className="inline-flex min-h-11 items-center rounded-full bg-signal px-7 text-[0.9375rem] font-medium text-on-signal shadow-lg transition-colors hover:bg-signal-strong"
-          >
-            Sign up
-          </Link>
-          <Link
-            href="/sign-in"
-            className="inline-flex min-h-11 items-center rounded-full border border-white/80 px-7 text-[0.9375rem] font-medium text-white transition-colors hover:bg-white/10"
-          >
-            Sign in
-          </Link>
-        </div>
-      </div>
+      <section className="rounded-lg border border-neutral-200 bg-neutral-50 p-6">
+        <p className="mb-4 text-neutral-600">
+          Check whether the database is connected:
+        </p>
+        <a
+          href="/api/health"
+          className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
+        >
+          Check health &rarr;
+        </a>
+      </section>
     </main>
   );
 }
