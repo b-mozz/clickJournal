@@ -125,3 +125,4 @@ describe("listVisiblePostsWithLikes", () => {
     expect(list[1].authorUsername).toBe(alice);
   });
 });
+});
