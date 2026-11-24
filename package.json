@@ -13,6 +13,7 @@
     "test:integration": "vitest run",
     "test:watch": "vitest",
     "db:migrate": "pnpm --filter @clickjournal/migrate dev",
+    "db:seed": "pnpm --filter @clickjournal/migrate seed",
     "db:reset": "rm -rf .pgdata && echo \"Restart pnpm dev (db re-initializes + migrations re-apply)\"",
     "db:dev": "pnpm --filter @clickjournal/db-server dev",
     "prisma:generate": "pnpm --filter @clickjournal/db generate",
